@@ -32,15 +32,38 @@ app.post("/api/usuarios", (req, res) => {
   if (!error) {
     const usuario = {
       id: usuarios.length + 1,
-      nombre: value.nombre
+      nombre: value.nombre,
     };
     usuarios.push(usuario);
     res.send(usuario);
-  }else{
+  } else {
     const mensaje = error.details[0].message;
     res.status(400).send(mensaje);
   }
- 
+});
+
+app.put("/api/usuarios/:id", (req, res) => {
+  //Encontrar si existe el objeto usuario a modificar
+  //let usuario = usuarios.find((u) => u.id === parseInt(req.params.id));
+  let usuario = existeUsuario(req.params.id);
+  if (!usuario) {
+    res.status(404).send("El usuario no fue encontrado");
+    return;
+  }
+
+  const schema = Joi.object({
+    nombre: Joi.string().min(3).required(),
+  });
+  const { error, value } = schema.validate({ nombre: req.body.nombre });
+  console.log(value);
+  if (error) {
+    const mensaje = error.details[0].message;
+    res.status(400).send(mensaje);
+    return;
+  }
+
+  usuario.nombre = req.body.nombre;
+  res.send(usuario);
 });
 
 app.post("/api/usuarios", (req, res) => {
@@ -57,3 +80,7 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log("Escuchando en el puerto ${port}");
 });
+
+function existeUsuario(id) {
+  return(usuarios.find(u => u.id === parseInt(id)));
+}
